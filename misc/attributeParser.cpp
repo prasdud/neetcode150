@@ -1,67 +1,63 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define int long long
-#define endl '\n'
-#define fast_io ios::sync_with_stdio(false); cin.tie(0); cout.tie(0);
-#define all(x) (x).begin(), (x).end()
-
 void solve() {
     int n, q;
     cin >> n >> q;
     cin.ignore();
 
-    unordered_map<string, string> tag_map;
-    vector<string> tag_stack;
-
-    regex attr_pattern(R"((\w+)\s*=\s*\"([^\"]+)\")");
+    unordered_map<string, string> attr_map;
+    string curr_path;
 
     for (int i = 0; i < n; ++i) {
         string line;
         getline(cin, line);
 
-        if (line.substr(0, 2) == "</") {
-            tag_stack.pop_back();
+        // Remove < and >
+        if (line[1] == '/') {
+            // Closing tag
+            int pos = curr_path.rfind('.');
+            if (pos != string::npos)
+                curr_path = curr_path.substr(0, pos); // remove last tag
+            else
+                curr_path = ""; // root level
         } else {
-            line = line.substr(1, line.length() - 2); // remove < and >
+            // Opening tag
+            line = line.substr(1, line.length() - 2); // strip < >
 
             stringstream ss(line);
-            string tag_name;
-            ss >> tag_name;
+            string tag;
+            ss >> tag;
 
-            // build current full path
-            string full_path = tag_name;
-            if (!tag_stack.empty()) {
-                full_path = tag_stack.back() + "." + tag_name;
-            }
-            tag_stack.push_back(full_path);
+            // Update current path
+            if (curr_path.empty())
+                curr_path = tag;
+            else
+                curr_path += "." + tag;
 
-            // Extract attributes from the remaining line
-            smatch match;
-            auto begin = sregex_iterator(line.begin(), line.end(), attr_pattern);
-            auto end = sregex_iterator();
-
-            for (auto it = begin; it != end; ++it) {
-                string attr = (*it)[1];
-                string val = (*it)[2];
-                tag_map[full_path + "~" + attr] = val;
+            // Parse attribute-value pairs
+            string attr, eq, val;
+            while (ss >> attr >> eq >> val) {
+                val = val.substr(1, val.length() - 2); // remove quotes
+                attr_map[curr_path + "~" + attr] = val;
             }
         }
     }
 
+    // Handle queries
     for (int i = 0; i < q; ++i) {
         string query;
         getline(cin, query);
-        if (tag_map.find(query) != tag_map.end()) {
-            cout << tag_map[query] << endl;
-        } else {
+        if (attr_map.count(query))
+            cout << attr_map[query] << endl;
+        else
             cout << "Not Found!" << endl;
-        }
     }
 }
 
-int32_t main() {
-    fast_io;
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(0);
     solve();
     return 0;
 }
