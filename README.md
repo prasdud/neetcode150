@@ -1,2 +1,5 @@
 # neetcode150
-Neetcode150
+2nd Attempt at becoming a leetcode monkey
+
+# Status
+Deprecated
